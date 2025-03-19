@@ -24,7 +24,7 @@ export class AppComponent {
   async startCamera() {
     try {
       this.videoStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+        video: { facingMode: 'user', width: { max: 640 }, height: { max: 480 } },
         audio: true,
       });
       const previewVideo = this.previewVideoElement.nativeElement;
@@ -37,14 +37,28 @@ export class AppComponent {
 
   startRecording() {
     this.recordedChunks = [];
-    this.mediaRecorder = new MediaRecorder(this.videoStream);
+    // En Safari, el mimeType debe ser 'video/mp4; codecs="avc1.64001E, mp4a.40.2"'
+    // para que el video se pueda grabar correctamente. En Chrome, el mimeType
+    // debe ser 'video/webm; codecs="vp8,opus"'. Si no se especifica el mimeType,
+    // Safari devuelve un error.
+    const mediaType = navigator.userAgent.indexOf('Safari') !== -1 && navigator.userAgent.indexOf('Chrome') === -1
+      ? 'video/mp4; codecs="avc1.64001E, mp4a.40.2"'
+      : 'video/webm; codecs="vp8,opus"';
+    // Creamos un objeto MediaRecorder que se encargue de grabar el video
+    try {
+      this.mediaRecorder = new MediaRecorder(this.videoStream, { mimeType: mediaType });
+    } catch (error) {
+      alert('Error creating MediaRecorder: ' + error);  
+      console.error('Error creating MediaRecorder:', error);
+    }    
+
     this.mediaRecorder.ondataavailable = (event) => {
       if (event.data.size > 0) {
         this.recordedChunks.push(event.data);
       }
     };
     this.mediaRecorder.onstop = () => {
-      this.videoBlob = new Blob(this.recordedChunks, { type: 'video/webm' });
+      this.videoBlob = new Blob(this.recordedChunks, { type: mediaType });
       this.videoURL = URL.createObjectURL(this.videoBlob);
       this.cdr.detectChanges();
     };
