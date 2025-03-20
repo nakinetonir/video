@@ -58,10 +58,15 @@ export class AppComponent {
     formData.append('video', blob, 'video.webm');
 
     this.http.post<{ message: string; videoId: string }>('https://videoback-two.vercel.app/upload', formData).subscribe((response) => {
-      debugger
-      this.videoId = response.videoId;
-      this.cdr.detectChanges();
-      alert('Video subido con éxito');
+      try {
+        this.videoId = response.videoId;
+        this.cdr.detectChanges();
+        alert('Video subido con éxito');
+      }
+      catch(error) {
+        alert(error);
+      }
+
     });
   }
 
