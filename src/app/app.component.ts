@@ -20,7 +20,7 @@ export class AppComponent {
   videoURL: string | null = null;
   videoId: string | null = null;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private cdr:  ChangeDetectorRef) {}
 
   startCamera() {
     navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
@@ -60,6 +60,7 @@ export class AppComponent {
     this.http.post<{ message: string; videoId: string }>('https://videoback-two.vercel.app/upload', formData).subscribe((response) => {
       debugger
       this.videoId = response.videoId;
+      this.cdr.detectChanges();
       alert('Video subido con éxito');
     });
   }
